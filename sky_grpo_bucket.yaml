@@ -1,0 +1,61 @@
+name: grpo
+
+resources:
+  accelerators: L4:1
+    infra: gcp/us-east4
+  memory: 30+
+  # image_id: docker:runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04
+
+workdir: .
+
+file_mounts:
+  ~/.netrc: ~/.netrc
+  ~/.cache/huggingface/token: ~/.cache/huggingface/token
+  ~/.git-credentials: ~/.git-credentials
+  /bucket:
+    name: grpo-bucket
+    store: volume
+    persistent: true
+    config:
+      disk_size: 128
+
+setup: |
+  ARCH=$(uname -m)
+  sudo apt update
+  sudo apt install -y gh nvtop
+
+  uv venv --python 3.12
+
+  if [ "$ARCH" = "aarch64" ]; then
+    echo "Installing VS Code for ARM64 (aarch64)..."
+    wget -O vscode.tgz 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-arm64'
+    tar xvf vscode.tgz
+    uv venv --python 3.12 --system-site-packages --seed
+  else
+    echo "Installing VS Code using wget"
+    wget -O vscode.tgz 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64'
+    tar xvf vscode.tgz
+    uv venv --python 3.12 --seed
+  fi
+  
+  chmod +x ./code
+  uv sync
+  uv sync --no-build-isolation --all-extras
+
+run: |
+  uv run python -m verl.model_merger merge \
+    --backend fsdp \
+    --local_dir /bucket/verl_grpo_pir/qwen4b_pir_sft_50_sys_pir_grpo/global_step_60/actor \
+    --hf_upload_path thavens/qwen4b_pir_sft_50_sys_pir_grpo_60
+  uv run python -m verl.model_merger merge \
+    --backend fsdp \
+    --local_dir /bucket/verl_grpo_pir/qwen4b_pir_sft_50_sys_pir_grpo/global_step_120/actor \
+    --hf_upload_path thavens/qwen4b_pir_sft_50_sys_pir_grpo_120
+  uv run python -m verl.model_merger merge \
+    --backend fsdp \
+    --local_dir /bucket/verl_grpo_pir/qwen4b_pir_sft_50_sys_pir_grpo/global_step_180/actor \
+    --hf_upload_path thavens/qwen4b_pir_sft_50_sys_pir_grpo_180
+  uv run python -m verl.model_merger merge \
+    --backend fsdp \
+    --local_dir /bucket/verl_grpo_pir/qwen4b_pir_sft_50_sys_pir_grpo/global_step_193/actor \
+    --hf_upload_path thavens/qwen4b_pir_sft_50_sys_pir_grpo_193

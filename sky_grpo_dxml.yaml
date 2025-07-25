@@ -1,0 +1,52 @@
+name: grpo
+
+resources:
+  accelerators: H100:2
+  use_spot: true
+  infra: gcp/us-east4
+  # image_id: docker:runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04
+  disk_tier: medium
+
+workdir: .
+
+file_mounts:
+  ~/.netrc: ~/.netrc
+  ~/.cache/huggingface/token: ~/.cache/huggingface/token
+  ~/.git-credentials: ~/.git-credentials
+  /bucket:
+    name: grpo-bucket
+    store: volume
+    persistent: true
+    config:
+      disk_size: 128
+
+setup: |
+  sudo chown -R $USER:$USER /bucket
+  sudo chmod -R u+rwx /bucket
+  
+  ARCH=$(uname -m)
+  sudo apt update
+  sudo apt install -y gh nvtop
+
+  uv venv --python 3.12
+
+  if [ "$ARCH" = "aarch64" ]; then
+    echo "Installing VS Code for ARM64 (aarch64)..."
+    wget -O vscode.tgz 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-arm64'
+    tar xvf vscode.tgz
+    uv venv --python 3.12 --system-site-packages --seed
+  else
+    echo "Installing VS Code using wget"
+    wget -O vscode.tgz 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64'
+    tar xvf vscode.tgz
+    uv venv --python 3.12 --seed
+  fi
+  
+  chmod +x ./code
+  uv sync
+  uv sync --no-build-isolation --all-extras
+
+run: |
+  uv run python process_data.py
+  uv run ray start --head --port 7345
+  uv run bash experiments/qwen-1.7B/pir_sft_step_50_dxml_1.7b.sh /bucket

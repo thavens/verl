@@ -2,11 +2,13 @@
 # build-system
 # -------------------------------
 [build-system]
-requires = [
-    "setuptools>=61.0",
-    "wheel"
-]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+test = ["pytest", "pre-commit", "py-spy"]
+gpu = ["liger-kernel", "flash-attn>=2.8.0,<2.8.1"]
+vllm = ["tensordict<=0.6.2", "vllm>=0.8"]
 
 # -------------------------------
 # project (PEP 621 metadata)
@@ -16,12 +18,44 @@ name = "verl"
 # We'll mark the version as "dynamic" because it's read from the file "verl/version/version" 
 # (PEP 621 calls this "dynamic version"). 
 # The actual version is specified in the [tool.setuptools.dynamic] section below.
-dynamic = ["version", "dependencies", "optional-dependencies", "authors", "urls"]
+dynamic = ["version", "authors", "urls"]
 
 description = "verl: Volcano Engine Reinforcement Learning for LLM"
-license = {file = "LICENSE"}  # or "Apache-2.0", if you prefer an SPDX identifier
-readme = {file = "README.md", content-type = "text/markdown"}
-requires-python = ">=3.8"
+license = { file = "LICENSE" } # or "Apache-2.0", if you prefer an SPDX identifier
+readme = { file = "README.md", content-type = "text/markdown" }
+requires-python = ">=3.12.0,<3.13.0"
+dependencies = [
+    "accelerate",
+    "megatron-core",
+    "codetiming",
+    "datasets>3.0.0",
+    "dill",
+    "hydra-core",
+    "numpy",
+    "pandas",
+    "peft",
+    "pyarrow>=19.0.0",
+    "pybind11",
+    "pylatexenc",
+    "ray[default]>=2.41.0,<=2.46.10",
+    "torchdata",
+    "tensordict<=0.6.2",
+    "transformers",
+    "wandb",
+    "packaging>=20.0",
+    "torch>=2.5.0",
+]
+# requirements.txt records the full set of dependencies for development
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+torchvision = { index = "pytorch" }
+torchaudio = { index = "pytorch" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
 
 # -------------------------------
 # tool.ruff - Linting configuration
@@ -32,7 +66,7 @@ requires-python = ">=3.8"
 line-length = 300 # TODO: Reduce this to a more reasonable value
 
 [tool.ruff.lint]
-isort = {known-first-party = ["verl"]}
+isort = { known-first-party = ["verl"] }
 # c.f. https://github.com/vllm-project/vllm/blob/ce8d6b75fc0586045df75ee1568a5b5f9957251b/pyproject.toml
 select = [
     # pycodestyle
@@ -49,7 +83,8 @@ select = [
 ]
 ignore = [
     # star imports
-    "F405", "F403",
+    "F405",
+    "F403",
     # lambda expression assignment
     "E731",
     # Loop control variable not used within loop body
@@ -72,7 +107,7 @@ include-package-data = true
 
 # We read the version from a file in 'verl/version/version'
 [tool.setuptools.dynamic]
-version = {file = "verl/version/version"}
+version = { file = "verl/version/version" }
 
 # If you need to mimic `package_dir={'': '.'}`:
 [tool.setuptools.package-dir]
@@ -81,7 +116,4 @@ version = {file = "verl/version/version"}
 # If you need to include specific non-Python data (like YAML files or version file):
 # This is the rough equivalent of package_data={'': ['version/*'], 'verl': ['trainer/config/*.yaml']}
 [tool.setuptools.package-data]
-verl = [
-  "version/*",
-  "trainer/config/*.yaml"
-]
+verl = ["version/*", "trainer/config/*.yaml"]

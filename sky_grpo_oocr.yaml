@@ -1,0 +1,47 @@
+name: grpo
+
+resources:
+  accelerators: H100:1
+  use_spot: true
+  infra: runpod
+  template_id: 3c6cxura13
+
+workdir: .
+
+file_mounts:
+  ~/.netrc: ~/.netrc
+  ~/.cache/huggingface/token: ~/.cache/huggingface/token
+  ~/.git-credentials: ~/.git-credentials
+  /runpod-volume:
+    name: grpo-volume
+    store: volume
+    config:
+      disk_size: 256  # in GB
+
+setup: |
+  ARCH=$(uname -m)
+  sudo apt update
+  sudo apt install -y gh nvtop
+
+  uv venv --python 3.12
+
+  if [ "$ARCH" = "aarch64" ]; then
+    echo "Installing VS Code for ARM64 (aarch64)..."
+    wget -O vscode.tgz 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-arm64'
+    tar xvf vscode.tgz
+    uv venv --python 3.12 --system-site-packages --seed
+  else
+    echo "Installing VS Code using wget"
+    wget -O vscode.tgz 'https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64'
+    tar xvf vscode.tgz
+    uv venv --python 3.12 --seed
+  fi
+  
+  chmod +x ./code
+  uv sync
+  uv sync --no-build-isolation --all-extras
+
+run: |
+  uv run python process_data.py
+  uv run ray start --head --port 7345
+  uv run bash experiments/qwen-1.7B/pir_sft_step_50_oocr_1.7b.sh /runpod-volume
