@@ -468,6 +468,8 @@ actor_rollout_ref:
     # Whether to wake up inference engine in multi-stage. (Wake up model weights first, then resume kv cache)
     multi_stage_wake_up: false
 
+    regex: null
+
     # Extra inference engine arguments (vllm, sglang).
     engine_kwargs:
 

@@ -40,6 +40,7 @@ from tensordict import TensorDict
 from vllm import LLM, SamplingParams
 from vllm.distributed import parallel_state as vllm_ps
 from vllm.lora.request import LoRARequest
+from vllm.sampling_params import GuidedDecodingParams
 from vllm.worker.worker_base import WorkerWrapperBase
 
 from verl import DataProto
@@ -187,7 +188,15 @@ class vLLMRollout(BaseRollout):
                 kwargs[k] = config.get(k)
 
         print(f"kwargs: {kwargs}")
-        self.sampling_params = SamplingParams(**kwargs)
+
+        if config.get("regex", None) is not None:
+            print(f"Using guided decoding with regex: {config.regex}")
+            guided_decoding_params = GuidedDecodingParams(
+                regex=config.regex,
+            )
+            self.sampling_params = SamplingParams(guided_decoding=guided_decoding_params, **kwargs)
+        else:
+            self.sampling_params = SamplingParams(**kwargs)
 
         self.pad_token_id = tokenizer.pad_token_id
 
