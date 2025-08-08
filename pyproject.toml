@@ -44,6 +44,7 @@ dependencies = [
     "wandb",
     "packaging>=20.0",
     "torch>=2.5.0",
+    "nltk",
 ]
 # requirements.txt records the full set of dependencies for development
 

@@ -16,7 +16,7 @@ uv run python -m verl.trainer.main_ppo \
     data.max_response_length=3072 \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
-    actor_rollout_ref.model.path=thavens/qwen3_1.7B_pir_sft_50 \
+    actor_rollout_ref.model.path=/storage_fast/models/michael_lavery/qwen3_1.7b/pir_sft/checkpoint-50 \
     actor_rollout_ref.model.use_liger=False \
     actor_rollout_ref.model.use_fused_kernels=True \
     actor_rollout_ref.actor.optim.lr=1e-6 \
@@ -24,7 +24,7 @@ uv run python -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.optim.warmup_style=constant \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=32 \
-    actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=8 \
+    actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=16 \
     actor_rollout_ref.actor.use_kl_loss=False \
     actor_rollout_ref.actor.kl_loss_coef=0.0 \
     actor_rollout_ref.actor.entropy_coeff=0 \
@@ -37,7 +37,7 @@ uv run python -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.gpu_memory_utilization=0.6 \
     actor_rollout_ref.rollout.n=16 \
     actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=64 \
-    actor_rollout_ref.ref.fsdp_config.param_offload=False \
+    actor_rollout_ref.ref.fsdp_config.param_offload=True \
     algorithm.use_kl_in_reward=False \
     algorithm.kl_ctrl.kl_coef=0.0 \
     trainer.val_before_train=False \
@@ -49,6 +49,6 @@ uv run python -m verl.trainer.main_ppo \
     trainer.nnodes=1 \
     trainer.save_freq=60 \
     trainer.test_freq=-1 \
-    trainer.total_epochs=1 \
+    trainer.total_epochs=2 \
     custom_reward_function.path=pir_reward.py \
     trainer.default_local_dir="${output_dir}/${project_name}/${experiment_name}"
