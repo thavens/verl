@@ -32,6 +32,7 @@ def make_pir_map(build_messages):
             "ability": "Security",
             "reward_model": {
                 "ground_truth": {
+                    "is_injected": example["is_injected"],
                     "injection_witnesses": example["injection_witnesses"],
                     "task_witnesses": example["task_witnesses"],
                 }
@@ -43,9 +44,10 @@ def make_pir_map(build_messages):
     return process_fn
 
 
-def build_dataset(build_messages):
+def build_dataset(build_messages, is_injected=True):
     data_source = "thavens/pir_multiwitness"
     dataset = datasets.load_dataset(data_source, split="train")
+    dataset = dataset.add_column("is_injected", [is_injected] * len(dataset))
 
     dataset = dataset.map(
         function=make_pir_map(build_messages),
@@ -57,22 +59,31 @@ def build_dataset(build_messages):
     return dataset
 
 
-def get_dataset() -> datasets.Dataset:
+def get_dataset(is_injected=True) -> datasets.Dataset:
     def build_messages(example):
         instruction = try_str_process(example["instruction"])
         prompt_injection = try_str_process(example["prompt_injection"])
         data = try_str_process(example["data"])
 
-        messages = [
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT_TEMPLATES[0].format(instruction=instruction),
-            },
-            {"role": "user", "content": data + " " + prompt_injection},
-        ]
+        if is_injected:
+            messages = [
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT_TEMPLATES[0].format(instruction=instruction),
+                },
+                {"role": "user", "content": data + " " + prompt_injection},
+            ]
+        else:
+            messages = [
+                {
+                    "role": "system",
+                    "content": SYSTEM_PROMPT_TEMPLATES[0].format(instruction=instruction + " " + prompt_injection),
+                },
+                {"role": "user", "content": data},
+            ]
         return messages
 
-    dataset = build_dataset(build_messages)
+    dataset = build_dataset(build_messages, is_injected=is_injected)
     return dataset
 
 
@@ -107,9 +118,7 @@ def get_pir_data_xml_dataset() -> datasets.Dataset:
         messages = [
             {
                 "role": "user",
-                "content": user_only_template.format(
-                    instruction=instruction, data=data + " " + prompt_injection
-                ),
+                "content": user_only_template.format(instruction=instruction, data=data + " " + prompt_injection),
             },
         ]
 
