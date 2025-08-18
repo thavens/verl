@@ -39,7 +39,7 @@ def try_str_process(text):
 
 
 # add a row to each data item that represents a unique id
-def make_pir_map(build_messages):
+def make_pir_map(build_messages, fused):
     def process_fn(example, idx):
         messages = build_messages(example)
         data = {
@@ -51,6 +51,7 @@ def make_pir_map(build_messages):
                     "is_injected": example["is_injected"],
                     "injection_witnesses": example["injection_witnesses"],
                     "task_witnesses": example["task_witnesses"],
+                    "fused": fused,
                 }
             },
             "extra_info": {"index": idx},
@@ -60,13 +61,17 @@ def make_pir_map(build_messages):
     return process_fn
 
 
-def build_dataset(build_messages, is_injected=True):
-    data_source = "thavens/pir_multiwitness"
+def build_dataset(
+    build_messages,
+    is_injected=True,
+    data_source="thavens/pir_multiwitness",
+    fused=False,
+):
     dataset = datasets.load_dataset(data_source, split="train")
     dataset = dataset.add_column("is_injected", [is_injected] * len(dataset))
 
     dataset = dataset.map(
-        function=make_pir_map(build_messages),
+        function=make_pir_map(build_messages, fused),
         with_indices=True,
         remove_columns=dataset.column_names,
         load_from_cache_file=False,
@@ -75,7 +80,9 @@ def build_dataset(build_messages, is_injected=True):
     return dataset
 
 
-def get_dataset(is_injected=True) -> datasets.Dataset:
+def get_dataset(
+    is_injected=True, data_source="thavens/pir_multiwitness", fused=False
+) -> datasets.Dataset:
     def build_messages(example):
         instruction = try_str_process(example["instruction"])
         prompt_injection = try_str_process(example["prompt_injection"])
@@ -85,21 +92,34 @@ def get_dataset(is_injected=True) -> datasets.Dataset:
             messages = [
                 {
                     "role": "system",
-                    "content": SYSTEM_PROMPT_TEMPLATES[0].format(instruction=instruction),
+                    "content": SYSTEM_PROMPT_TEMPLATES[0].format(
+                        instruction=instruction
+                    ),
                 },
-                {"role": "user", "content": data + " " + random.choice(TRANSITION_PROMPTS).format(injected_prompt=prompt_injection)},
+                {
+                    "role": "user",
+                    "content": data
+                    + " "
+                    + random.choice(TRANSITION_PROMPTS).format(
+                        injected_prompt=prompt_injection
+                    ),
+                },
             ]
         else:
             messages = [
                 {
                     "role": "system",
-                    "content": SYSTEM_PROMPT_TEMPLATES[0].format(instruction=instruction + " " + prompt_injection),
+                    "content": SYSTEM_PROMPT_TEMPLATES[0].format(
+                        instruction=instruction + " " + prompt_injection
+                    ),
                 },
                 {"role": "user", "content": data},
             ]
         return messages
 
-    dataset = build_dataset(build_messages, is_injected=is_injected)
+    dataset = build_dataset(
+        build_messages, is_injected=is_injected, data_source=data_source, fused=fused
+    )
     return dataset
 
 
@@ -113,15 +133,26 @@ def get_pir_oocr_dataset(is_injected=True) -> datasets.Dataset:
             messages = [
                 {
                     "role": "system",
-                    "content": OOCR_SYSTEM_PROMPT_TEMPLATES[0].format(instruction=instruction),
+                    "content": OOCR_SYSTEM_PROMPT_TEMPLATES[0].format(
+                        instruction=instruction
+                    ),
                 },
-                {"role": "user", "content": data + " " + random.choice(TRANSITION_PROMPTS).format(injected_prompt=prompt_injection)},
+                {
+                    "role": "user",
+                    "content": data
+                    + " "
+                    + random.choice(TRANSITION_PROMPTS).format(
+                        injected_prompt=prompt_injection
+                    ),
+                },
             ]
         else:
             messages = [
                 {
                     "role": "system",
-                    "content": OOCR_SYSTEM_PROMPT_TEMPLATES[0].format(instruction=instruction + " " + prompt_injection),
+                    "content": OOCR_SYSTEM_PROMPT_TEMPLATES[0].format(
+                        instruction=instruction + " " + prompt_injection
+                    ),
                 },
                 {"role": "user", "content": data},
             ]
@@ -143,7 +174,14 @@ def get_pir_data_xml_dataset() -> datasets.Dataset:
         messages = [
             {
                 "role": "user",
-                "content": user_only_template.format(instruction=instruction, data=data + " " + random.choice(TRANSITION_PROMPTS).format(injected_prompt=prompt_injection)),
+                "content": user_only_template.format(
+                    instruction=instruction,
+                    data=data
+                    + " "
+                    + random.choice(TRANSITION_PROMPTS).format(
+                        injected_prompt=prompt_injection
+                    ),
+                ),
             },
         ]
 
