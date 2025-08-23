@@ -30,10 +30,10 @@ if __name__ == "__main__":
 
     ds = pir_data.get_all_prompt_dataset(data_source="thavens/pir_multiwitness_struq")
     dsb = pir_data.get_all_prompt_dataset(data_source="thavens/pir_multiwitness_struq", is_injected=False)
-    print("-" * 10 + " Dataset Example for pir_struq_all_prompt_grpo " + "-" * 10)
+    print("-" * 10 + " Dataset Example for pir_struq_ap " + "-" * 10)
     print(json.dumps(ds[0]["prompt"], indent=2))
-    ds.to_parquet(os.path.join(local_dir, "pir_struq_all_prompt_grpo.parquet"))
-    datasets.interleave_datasets([ds, dsb]).to_parquet(os.path.join(local_dir, "pir_struq_all_prompt_grpo_pt_w.parquet"))
+    ds.to_parquet(os.path.join(local_dir, "pir_struq_ap.parquet"))
+    datasets.interleave_datasets([ds, dsb]).to_parquet(os.path.join(local_dir, "pir_struq_ap_pt_w.parquet"))
 
     ds = pir_data.get_dataset()
     dsb = pir_data.get_dataset(is_injected=False)

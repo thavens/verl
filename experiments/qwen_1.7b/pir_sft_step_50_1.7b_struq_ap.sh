@@ -4,20 +4,19 @@ output_dir=${1:-/storage_fast/models/michael_lavery}
 set -xeuo pipefail
 
 project_name='verl_grpo_pir'
-experiment_name='q3_1.7b_sft_50_pt_w_basic_v2_grpo_run3'
+experiment_name='pir_sft_50_1.7b_struq_ap'
 
 # ppo mini batch size 128 -> 512 global batch size per gradient step
 # pop mini batch size 64 -> 256 global batch size per gradient step
 uv run python -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=./pir_grpo_pt_w.parquet \
-    data.val_files=./pir_grpo_pt_w.parquet \
+    data.train_files=./pir_struq_ap.parquet \
+    data.val_files=./pir_struq_ap.parquet \
     data.train_batch_size=64 \
     data.max_prompt_length=1024 \
     data.max_response_length=3072 \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
-    data.shuffle=False \
     actor_rollout_ref.model.path=/storage_fast/models/michael_lavery/qwen3_1.7b/pir_sft/checkpoint-50 \
     actor_rollout_ref.model.use_liger=False \
     actor_rollout_ref.model.use_fused_kernels=True \
@@ -54,5 +53,4 @@ uv run python -m verl.trainer.main_ppo \
     trainer.test_freq=-1 \
     trainer.total_epochs=2 \
     custom_reward_function.path=pir_reward.py \
-    custom_reward_function.name=probe_type \
     trainer.default_local_dir="${output_dir}/${project_name}/${experiment_name}"
