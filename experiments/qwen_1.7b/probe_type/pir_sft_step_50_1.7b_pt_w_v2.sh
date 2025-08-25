@@ -24,7 +24,6 @@ uv run python -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.actor.optim.lr_warmup_steps=10 \
     actor_rollout_ref.actor.optim.warmup_style=constant \
-    actor_rollout_ref.actor.optim.total_training_steps=180 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=32 \
     actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=16 \
@@ -53,6 +52,7 @@ uv run python -m verl.trainer.main_ppo \
     trainer.save_freq=60 \
     trainer.test_freq=-1 \
     trainer.total_epochs=2 \
+    trainer.total_training_steps=180 \
     custom_reward_function.path=pir_reward.py \
     custom_reward_function.name=probe_type \
     trainer.default_local_dir="${output_dir}/${project_name}/${experiment_name}"

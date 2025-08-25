@@ -1,10 +1,11 @@
 name: grpo
 
 resources:
-  accelerators: H100:1
+  accelerators: H100:2
   use_spot: true
-  infra: runpod
-  template_id: 3c6cxura13
+  infra: gcp/us-east4
+  # image_id: docker:runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04
+  disk_tier: medium
 
 workdir: .
 
@@ -12,13 +13,17 @@ file_mounts:
   ~/.netrc: ~/.netrc
   ~/.cache/huggingface/token: ~/.cache/huggingface/token
   ~/.git-credentials: ~/.git-credentials
-  /runpod-volume:
-    name: grpo-volume
+  /bucket:
+    name: grpo-bucket
     store: volume
+    persistent: true
     config:
-      disk_size: 256  # in GB
+      disk_size: 128
 
 setup: |
+  sudo chown -R $USER:$USER /bucket
+  sudo chmod -R u+rwx /bucket
+  
   ARCH=$(uname -m)
   sudo apt update
   sudo apt install -y gh nvtop
@@ -44,4 +49,4 @@ setup: |
 run: |
   uv run python process_data.py
   uv run ray start --head --port 7345
-  uv run bash experiments/qwen-1.7B/pir_sft_step_50_oocr_1.7b.sh /runpod-volume
+  uv run bash experiments/qwen_4b/pir_sft_step_50_1.7b_struq_ap.sh /bucket

@@ -4,20 +4,20 @@ output_dir=${1:-/storage_fast/models/michael_lavery}
 set -xeuo pipefail
 
 project_name='verl_grpo_pir'
-experiment_name='q3_1.7b_sft_50_struq_basic'
+experiment_name='q3_4b_sft_50_struq_ap'
 
 # ppo mini batch size 128 -> 512 global batch size per gradient step
 # pop mini batch size 64 -> 256 global batch size per gradient step
 uv run python -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=./pir_struq_grpo.parquet \
-    data.val_files=./pir_struq_grpo.parquet \
+    data.train_files=./pir_struq_ap.parquet \
+    data.val_files=./pir_struq_ap.parquet \
     data.train_batch_size=64 \
     data.max_prompt_length=1024 \
     data.max_response_length=3072 \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
-    actor_rollout_ref.model.path=/storage_fast/models/michael_lavery/qwen3_1.7b/pir_sft/checkpoint-50 \
+    actor_rollout_ref.model.path=thavens/pir_sft_ckpt_50 \
     actor_rollout_ref.model.use_liger=False \
     actor_rollout_ref.model.use_fused_kernels=True \
     actor_rollout_ref.actor.optim.lr=1e-6 \
@@ -25,7 +25,7 @@ uv run python -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.optim.warmup_style=constant \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=32 \
-    actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=16 \
+    actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=8 \
     actor_rollout_ref.actor.use_kl_loss=False \
     actor_rollout_ref.actor.kl_loss_coef=0.0 \
     actor_rollout_ref.actor.entropy_coeff=0 \
