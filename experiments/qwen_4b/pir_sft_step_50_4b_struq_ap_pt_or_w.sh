@@ -4,12 +4,12 @@ output_dir=${1:-/storage_fast/models/michael_lavery}
 set -xeuo pipefail
 
 project_name='verl_grpo_pir'
-experiment_name='pir_sft_50_1.7b_struq_pt_w_basic_ppo'
+experiment_name='q3_4b_sft_50_struq_ap_pt_or_w'
 
 # ppo mini batch size 128 -> 512 global batch size per gradient step
 # pop mini batch size 64 -> 256 global batch size per gradient step
 uv run python -m verl.trainer.main_ppo \
-    algorithm.adv_estimator=gae \
+    algorithm.adv_estimator=grpo \
     data.train_files=./pir_struq_grpo_pt_w.parquet \
     data.val_files=./pir_struq_grpo_pt_w.parquet \
     data.train_batch_size=64 \
@@ -18,7 +18,7 @@ uv run python -m verl.trainer.main_ppo \
     data.filter_overlong_prompts=True \
     data.truncation='error' \
     data.shuffle=False \
-    actor_rollout_ref.model.path=/storage_fast/models/michael_lavery/qwen3_1.7b/pir_sft/checkpoint-50 \
+    actor_rollout_ref.model.path=thavens/pir_sft_ckpt_50 \
     actor_rollout_ref.model.use_liger=False \
     actor_rollout_ref.model.use_fused_kernels=True \
     actor_rollout_ref.actor.optim.lr=1e-6 \
@@ -40,25 +40,19 @@ uv run python -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.n=16 \
     actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=64 \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
-    critic.optim.lr=1e-6 \
-    critic.model.use_remove_padding=False \
-    critic.model.path=/storage_fast/models/michael_lavery/qwen3_1.7b/pir_sft/checkpoint-50 \
-    critic.model.enable_gradient_checkpointing=True \
-    critic.ppo_micro_batch_size_per_gpu=8 \
-    critic.model.fsdp_config.param_offload=False \
-    critic.model.fsdp_config.optimizer_offload=False \
     algorithm.use_kl_in_reward=False \
     algorithm.kl_ctrl.kl_coef=0.0 \
     trainer.val_before_train=False \
-    trainer.critic_warmup=20 \
+    trainer.critic_warmup=0 \
     trainer.logger=['console','wandb'] \
     trainer.project_name="${project_name}" \
     trainer.experiment_name="${experiment_name}" \
-    trainer.n_gpus_per_node=4 \
+    trainer.n_gpus_per_node=2 \
     trainer.nnodes=1 \
     trainer.save_freq=60 \
     trainer.test_freq=-1 \
     trainer.total_epochs=2 \
     trainer.total_training_steps=180 \
     custom_reward_function.path=pir_reward.py \
+    custom_reward_function.name=probe_type \
     trainer.default_local_dir="${output_dir}/${project_name}/${experiment_name}"
