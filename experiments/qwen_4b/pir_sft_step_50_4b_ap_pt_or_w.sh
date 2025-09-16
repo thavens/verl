@@ -10,8 +10,8 @@ experiment_name='q3_4b_sft_50_ap_pt_or_w'
 # pop mini batch size 64 -> 256 global batch size per gradient step
 uv run python -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=./pir_grpo_pt_w.parquet \
-    data.val_files=./pir_grpo_pt_w.parquet \
+    data.train_files=./pir_grpo_ap_pt_w.parquet \
+    data.val_files=./pir_grpo_ap_pt_w.parquet \
     data.train_batch_size=64 \
     data.max_prompt_length=1024 \
     data.max_response_length=3072 \

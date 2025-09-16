@@ -51,4 +51,4 @@ setup: |
 run: |
   uv run python process_data.py
   uv run ray start --head --port 7345
-  uv run bash experiments/qwen_4b/pir_sft_step_50_oocr_4b_sky.sh /bucket
+  uv run bash experiments/qwen_4b/pir_sft_step_50_oocr_4b_sky_wd.sh /bucket
