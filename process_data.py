@@ -44,6 +44,13 @@ if __name__ == "__main__":
     datasets.concatenate_datasets([ds, dsb]).to_parquet(os.path.join(local_dir, "pir_grpo_pt.parquet"))
     datasets.interleave_datasets([ds, dsb]).to_parquet(os.path.join(local_dir, "pir_grpo_pt_w.parquet"))
 
+    ds = pir_data.get_all_prompt_dataset()
+    dsb = pir_data.get_all_prompt_dataset(is_injected=False)
+    print("-" * 10 + " Dataset Example for pir_grpo_ap " + "-" * 10)
+    print(json.dumps(ds[0]["prompt"], indent=2))
+    ds.to_parquet(os.path.join(local_dir, "pir_grpo_ap.parquet"))
+    datasets.interleave_datasets([ds, dsb]).to_parquet(os.path.join(local_dir, "pir_grpo_ap_pt_w.parquet"))
+
     ds = pir_data.get_pir_oocr_dataset()
     dsb = pir_data.get_pir_oocr_dataset(is_injected=False)
     print("-" * 10 + " Dataset Example for pir_oocr_grpo " + "-" * 10)
